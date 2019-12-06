@@ -9,10 +9,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: home()
+      home: home(context)
     );
   }
-  Widget home() {
+  Widget home(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: Icon(Icons.menu),
@@ -30,39 +30,29 @@ class MyApp extends StatelessWidget {
           ),
         ],
       ),
-      body: body()
+      body: body(context)
     );
   }
-  Widget body() {
+  Widget body(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.red,
-      ),
-      child: cols()
+      // decoration: BoxDecoration(
+      //   color: Colors.red,
+      // ),
+      child: testList(context) // cols() // listViewTest2(context)
     );
-  }
-  Widget cols() {
-    return Column(      
-      children: <Widget>[
-        rows(), rows(), rows()
-      ],
-    );
-  }
-  Widget rows() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: <Widget>[
-        Text('111'),
-        Text('222'),
-        Text('333'),
-        Text('444'),
-        Text('555'),
-        Text('666'),
-        Text('777'),
-        Text('888'),
-        Text('999'),
-      ]      
+  }  
+
+  Widget testList (BuildContext context) {
+    List<String> items = List.generate(100, (i) => '리스트 테스트 $i');
+    return ListView.builder(
+      itemCount: items.length,
+      itemBuilder: (context, i) {
+        return ListTile(
+          title: Text(items[i]),
+          subtitle: Text('this is test $i ㅎㅎㅎㅎㅎㅎ')
+        );
+      },
     );
   }
 }
