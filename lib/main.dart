@@ -4,8 +4,7 @@ void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  
+class MyApp extends StatelessWidget {  
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -14,43 +13,86 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class AppState {
+  bool loading;
+  String user;
+  AppState(this.loading, this.user);
+}
+
 class HomeWidget extends StatefulWidget {
   @override
   _HomeWidgetState createState() => _HomeWidgetState();  
 }
+
 class _HomeWidgetState extends State<HomeWidget> {
-  int i = 0;
+  final app = AppState(true, '');  
+  @override
+  void initState() { 
+    super.initState();    
+    _delay();
+  }
+  _delay () {
+    Future.delayed(Duration(seconds: 1), () {
+      setState(() => app.loading = false);
+    });  
+  }
   @override
   Widget build(BuildContext context) {
+    if (app.loading) return _loading();
+    if (app.user.isEmpty) return _signIn();
+    return _main();
+  }
+  Widget _loading () {
+    return Scaffold(
+      appBar: AppBar(title: Text('loading...')),
+      body: Center(child: CircularProgressIndicator())
+    );
+  }
+  Widget _signIn () {
     return Scaffold(
       appBar: AppBar(
-        title: Text('hiru~'),
+        title: Text('login page')
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Text('id'), Text('pass'),            
+            RaisedButton(
+              child: Text('login'), 
+              onPressed: () {
+                setState(() {
+                  app.loading = true;
+                  app.user = 'my name';
+                  _delay();
+                });
+              }
+            )
+          ],
+        )
+      )
+      
+    );
+  }
+  Widget _main () {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(app.user),
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.send),
+            icon: Icon(Icons.account_circle),
             onPressed: () {
-              setState(() => i++);
+              setState(() {
+                app.user = '';
+                app.loading = true;
+                _delay();
+              });
             },
           )
         ],
       ),
-      body: XXX(i: i)
+      body: Center(child: Text('contents'))
     );
-  }
-}
-
-class XXX extends StatelessWidget {
-  XXX({Key key, this.i: 0}) : super(key: key);
-  final int i;
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: _change(i)
-    );
-  }
-  Widget _change (i) {
-    if (i == 0) return CircularProgressIndicator();
-    else if (i == 1) return Icon(Icons.settings);
-    else return Text('yyy: $i');
   }
 }
