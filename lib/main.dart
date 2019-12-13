@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 void main() { 
   runApp(MyApp());
@@ -15,7 +17,7 @@ class MyApp extends StatelessWidget {
 
 class AppState {
   bool loading;
-  String user;
+  FirebaseUser user;
   AppState(this.loading, this.user);
 }
 
@@ -25,21 +27,23 @@ class HomeWidget extends StatefulWidget {
 }
 
 class _HomeWidgetState extends State<HomeWidget> {
-  final app = AppState(true, '');  
-  @override
-  void initState() { 
-    super.initState();    
-    _delay();
-  }
-  _delay () {
-    Future.delayed(Duration(seconds: 1), () {
-      setState(() => app.loading = false);
-    });  
-  }
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final app = AppState(false, null);  
+  // @override
+  // void initState() { 
+  //   super.initState();    
+  //   _delay();
+  // }
+  // _delay () {
+  //   Future.delayed(Duration(seconds: 1), () {
+  //     setState(() => app.loading = false);
+  //   });  
+  // }
   @override
   Widget build(BuildContext context) {
     if (app.loading) return _loading();
-    if (app.user.isEmpty) return _signIn();
+    if (app.user == null) return _loginPage();
     return _main();
   }
   Widget _loading () {
@@ -48,7 +52,7 @@ class _HomeWidgetState extends State<HomeWidget> {
       body: Center(child: CircularProgressIndicator())
     );
   }
-  Widget _signIn () {
+  Widget _loginPage () {
     return Scaffold(
       appBar: AppBar(
         title: Text('login page')
@@ -62,11 +66,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             RaisedButton(
               child: Text('login'), 
               onPressed: () {
-                setState(() {
-                  app.loading = true;
-                  app.user = 'my name';
-                  _delay();
-                });
+                _signIn();
               }
             )
           ],
@@ -78,21 +78,42 @@ class _HomeWidgetState extends State<HomeWidget> {
   Widget _main () {
     return Scaffold(
       appBar: AppBar(
-        title: Text(app.user),
+        title: Text('app.user'),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.account_circle),
             onPressed: () {
-              setState(() {
-                app.user = '';
-                app.loading = true;
-                _delay();
-              });
+              _signOut();
             },
           )
         ],
       ),
       body: Center(child: Text('contents'))
     );
+  }
+
+  Future<String> _signIn () async {
+    setState(() => app.loading = true);
+    final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+    final AuthCredential credential = GoogleAuthProvider.getCredential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+    final AuthResult authResult = await _auth.signInWithCredential(credential);
+    final FirebaseUser user = authResult.user;
+
+    setState(() {
+      app.loading = false;
+      app.user = user;      
+    });
+
+    return 'success';
+
+  }
+  _signOut () async {
+    await _googleSignIn.signOut();
+    setState(() => app.user = null);
   }
 }
