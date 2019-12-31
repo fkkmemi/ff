@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() { 
   runApp(MyApp());
@@ -88,7 +89,90 @@ class _HomeWidgetState extends State<HomeWidget> {
           )
         ],
       ),
-      body: Center(child: Text('contents'))
+      body: Center(
+        child: Column(
+          children: <Widget>[
+            RaisedButton(
+              child: Text('Create add'),
+              onPressed: () {
+                Firestore.instance
+                  .collection('test')
+                  .add({ 'aaaa': 'bbbb', 'num': 1111 });
+              },
+            ),
+            RaisedButton(
+              child: Text('Create setData'),
+              onPressed: () {
+                Firestore.instance
+                  .collection('test')
+                  .document('t1')
+                  .setData({ 'aaaa': 'xxxx', 'num': 1234 });
+              },
+            ),
+            RaisedButton(
+              child: Text('Read'),
+              onPressed: () {            
+                Firestore.instance
+                  .collection('test')
+                  .document('t1')
+                  .get()
+                  .then((DocumentSnapshot ds) {
+                    print(ds['aaaa']);
+                    print(ds['num']);
+                  })
+                  .catchError((onError) => print(onError));   
+              },
+            ),
+            RaisedButton(
+              child: Text('Read All'),
+              onPressed: () {            
+                Firestore.instance
+                  .collection('test')
+                  .getDocuments()
+                  .then((QuerySnapshot sn) {
+                    sn.documents.forEach((doc) => print(doc.data));
+                  })
+                  .catchError((onError) => print(onError));   
+              },
+            ),
+            RaisedButton(
+              child: Text('Update'),
+              onPressed: () {          
+                Firestore.instance
+                  .collection('test')
+                  .document('t1')
+                  .updateData({ 'aaaa': 'cccc', 'num': 4444, 'xxx': 1234 });    
+              },
+            ),
+            RaisedButton(
+              child: Text('Delete'),
+              onPressed: () {        
+                Firestore.instance
+                  .collection('test')
+                  .document('t1')
+                  .delete();  
+              },
+            )
+          ],
+        )
+      )
+      // body: Center(
+      //   child: RaisedButton(
+      //     child: Text('fire store test'),
+      //     onPressed: () {
+      //       Firestore.instance
+      //         .collection('test')
+      //         .document('type')
+      //         .get()
+      //         .then((DocumentSnapshot ds) {
+      //           print(ds['str']);
+      //           print(ds['num']);
+
+      //         })
+      //         .catchError((onError) => print(onError)); 
+      //     },
+      //   )
+      // )
     );
   }
 
