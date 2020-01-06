@@ -31,16 +31,6 @@ class _HomeWidgetState extends State<HomeWidget> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final app = AppState(false, null);  
-  // @override
-  // void initState() { 
-  //   super.initState();    
-  //   _delay();
-  // }
-  // _delay () {
-  //   Future.delayed(Duration(seconds: 1), () {
-  //     setState(() => app.loading = false);
-  //   });  
-  // }
   @override
   Widget build(BuildContext context) {
     if (app.loading) return _loading();
@@ -82,6 +72,15 @@ class _HomeWidgetState extends State<HomeWidget> {
         title: Text('app.user'),
         actions: <Widget>[
           IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => WriteDoc()),
+              );
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.account_circle),
             onPressed: () {
               _signOut();
@@ -89,90 +88,26 @@ class _HomeWidgetState extends State<HomeWidget> {
           )
         ],
       ),
-      body: Center(
-        child: Column(
-          children: <Widget>[
-            RaisedButton(
-              child: Text('Create add'),
-              onPressed: () {
-                Firestore.instance
-                  .collection('test')
-                  .add({ 'aaaa': 'bbbb', 'num': 1111 });
-              },
-            ),
-            RaisedButton(
-              child: Text('Create setData'),
-              onPressed: () {
-                Firestore.instance
-                  .collection('test')
-                  .document('t1')
-                  .setData({ 'aaaa': 'xxxx', 'num': 1234 });
-              },
-            ),
-            RaisedButton(
-              child: Text('Read'),
-              onPressed: () {            
-                Firestore.instance
-                  .collection('test')
-                  .document('t1')
-                  .get()
-                  .then((DocumentSnapshot ds) {
-                    print(ds['aaaa']);
-                    print(ds['num']);
-                  })
-                  .catchError((onError) => print(onError));   
-              },
-            ),
-            RaisedButton(
-              child: Text('Read All'),
-              onPressed: () {            
-                Firestore.instance
-                  .collection('test')
-                  .getDocuments()
-                  .then((QuerySnapshot sn) {
-                    sn.documents.forEach((doc) => print(doc.data));
-                  })
-                  .catchError((onError) => print(onError));   
-              },
-            ),
-            RaisedButton(
-              child: Text('Update'),
-              onPressed: () {          
-                Firestore.instance
-                  .collection('test')
-                  .document('t1')
-                  .updateData({ 'aaaa': 'cccc', 'num': 4444, 'xxx': 1234 });    
-              },
-            ),
-            RaisedButton(
-              child: Text('Delete'),
-              onPressed: () {        
-                Firestore.instance
-                  .collection('test')
-                  .document('t1')
-                  .delete();  
-              },
-            )
-          ],
-        )
-      )
-      // body: Center(
-      //   child: RaisedButton(
-      //     child: Text('fire store test'),
-      //     onPressed: () {
-      //       Firestore.instance
-      //         .collection('test')
-      //         .document('type')
-      //         .get()
-      //         .then((DocumentSnapshot ds) {
-      //           print(ds['str']);
-      //           print(ds['num']);
+      body: _list()
+    );
+  }
 
-      //         })
-      //         .catchError((onError) => print(onError)); 
-      //     },
-      //   )
-      // )
+  Widget _list () {
+    return StreamBuilder<QuerySnapshot>(
+      stream: Firestore.instance.collection('test').snapshots(),
+      builder: (context, snapshot) {
+        final items = snapshot.data.documents;
+        return ListView.builder(
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return ListTile(
+              title: Text(item['title']),
+              subtitle: Text(item['subtitle'])
+            );
+          },
+        );
+      }
     );
   }
 
@@ -199,5 +134,40 @@ class _HomeWidgetState extends State<HomeWidget> {
   _signOut () async {
     await _googleSignIn.signOut();
     setState(() => app.user = null);
+  }
+}
+
+class WriteDoc extends StatelessWidget {
+  var title, subtitle;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Second Route"),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.save),
+            onPressed: () async {
+              await Firestore.instance.collection('test').add({ 'title': title, 'subtitle': subtitle });
+              Navigator.pop(context);
+            },
+          )
+        ],
+      ),
+      body: Container(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          children: <Widget>[
+            TextField(
+              onChanged: (text) => title = text,
+            ),
+            TextField(
+              onChanged: (text) => subtitle = text,
+            )
+          ],
+        )
+
+      ),
+    );
   }
 }
